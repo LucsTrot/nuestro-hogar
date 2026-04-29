@@ -293,6 +293,25 @@ body{
 }
 .btn-deshacer:hover{color:var(--muted);}
 
+/* ── BORRAR RECORDATORIO ── */
+.btn-borrar-rem{
+  width:28px;height:28px;flex-shrink:0;
+  background:transparent;
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:var(--hint);
+  font-size:13px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;
+  margin-top:1px;
+  font-family:'Sora',sans-serif;
+}
+.btn-borrar-rem:hover{
+  background:rgba(232,112,112,0.1);
+  border-color:rgba(232,112,112,0.3);
+  color:var(--red);
+}
+
 /* ── SELECTOR USUARIO ── */
 .user-picker-overlay{
   display:none;position:fixed;inset:0;
@@ -741,29 +760,33 @@ body{
         <span id="rem-count" style="font-size:11px;font-weight:400;color:var(--muted);">4 items</span>
       </div>
       <div id="rem-list">
-        <div class="rem-item" data-titulo="Pagar expensas" data-fecha="Vence 30 abril" data-urg="u">
+        <div class="rem-item">
           <div class="rem-pip pip-red"></div>
           <div class="rem-body"><div class="rem-title">Pagar expensas</div><div class="rem-date">Vence 30 abril</div></div>
           <div class="rem-tag tag-u">Urgente</div>
-          <div class="rem-chk" onclick="marcarHecho(this, 'Lucas')"></div>
+          <div class="rem-chk" onclick="marcarHecho(this)"></div>
+          <button class="btn-borrar-rem" onclick="borrarRem(this)" title="Borrar">✕</button>
         </div>
-        <div class="rem-item" data-titulo="Renovar contrato de alquiler" data-fecha="Para el 15 mayo" data-urg="p">
+        <div class="rem-item">
           <div class="rem-pip pip-rosa"></div>
           <div class="rem-body"><div class="rem-title">Renovar contrato de alquiler</div><div class="rem-date">Para el 15 mayo</div></div>
           <div class="rem-tag tag-p">Pronto</div>
-          <div class="rem-chk" onclick="marcarHecho(this, 'Lucas')"></div>
+          <div class="rem-chk" onclick="marcarHecho(this)"></div>
+          <button class="btn-borrar-rem" onclick="borrarRem(this)" title="Borrar">✕</button>
         </div>
-        <div class="rem-item" data-titulo="Cambiar filtro del agua" data-fecha="Antes de fin de mes" data-urg="n">
+        <div class="rem-item">
           <div class="rem-pip pip-lila"></div>
           <div class="rem-body"><div class="rem-title">Cambiar filtro del agua</div><div class="rem-date">Antes de fin de mes</div></div>
           <div class="rem-tag tag-n">Normal</div>
-          <div class="rem-chk" onclick="marcarHecho(this, 'Lucas')"></div>
+          <div class="rem-chk" onclick="marcarHecho(this)"></div>
+          <button class="btn-borrar-rem" onclick="borrarRem(this)" title="Borrar">✕</button>
         </div>
-        <div class="rem-item" data-titulo="Turno veterinario" data-fecha="5 mayo" data-urg="n">
+        <div class="rem-item">
           <div class="rem-pip pip-lila"></div>
           <div class="rem-body"><div class="rem-title">Turno veterinario</div><div class="rem-date">5 mayo</div></div>
           <div class="rem-tag tag-n">Normal</div>
-          <div class="rem-chk" onclick="marcarHecho(this, 'Lucas')"></div>
+          <div class="rem-chk" onclick="marcarHecho(this)"></div>
+          <button class="btn-borrar-rem" onclick="borrarRem(this)" title="Borrar">✕</button>
         </div>
       </div>
       <div id="rem-empty" style="display:none;text-align:center;padding:24px 0;color:var(--muted);font-size:13px;">
@@ -1109,7 +1132,7 @@ async function syncCargar(){
       recs.pend.forEach(p=>{
         const div=document.createElement('div');
         div.className='rem-item';
-        div.innerHTML=`<div class="rem-pip ${p.pipClass}"></div><div class="rem-body"><div class="rem-title">${p.titulo}</div><div class="rem-date">${p.fecha}</div></div><div class="${p.tagClass}">${p.tagText}</div><div class="rem-chk" onclick="marcarHecho(this)"></div>`;
+        div.innerHTML=`<div class="rem-pip ${p.pipClass}"></div><div class="rem-body"><div class="rem-title">${p.titulo}</div><div class="rem-date">${p.fecha}</div></div><div class="${p.tagClass}">${p.tagText}</div><div class="rem-chk" onclick="marcarHecho(this)"></div><button class="btn-borrar-rem" onclick="borrarRem(this)" title="Borrar">✕</button>`;
         remList.appendChild(div);
       });
     }
@@ -1119,7 +1142,7 @@ async function syncCargar(){
         const esSol = r.quien.startsWith('Sol');
         const div=document.createElement('div');
         div.className='real-item';
-        div.innerHTML=`<div class="real-check-done">✓</div><div class="real-body"><div class="real-title">${r.titulo}</div><div class="real-date">${r.fecha}</div><div class="real-quien ${esSol?'sol':''}"><div class="real-quien-dot"></div>${r.quien}</div></div>`;
+        div.innerHTML=`<div class="real-check-done">✓</div><div class="real-body"><div class="real-title">${r.titulo}</div><div class="real-date">${r.fecha}</div><div class="real-quien ${esSol?'sol':''}"><div class="real-quien-dot"></div>${r.quien}</div></div><button class="btn-borrar-rem" onclick="borrarReal(this)" title="Borrar">✕</button>`;
         realList.appendChild(div);
       });
       document.getElementById('card-realizados').style.display='block';
@@ -1675,6 +1698,7 @@ function confirmarHecho(quien){
         </div>
       </div>
       <button class="btn-deshacer" onclick="deshacerRealizado(this,'${titulo}','${fecha}','${pipClass}','${tagClass}','${tagText}')">deshacer</button>
+      <button class="btn-borrar-rem" onclick="borrarReal(this)" title="Borrar">✕</button>
     `;
     const realList = document.getElementById('real-list');
     realList.prepend(realDiv);
@@ -1706,6 +1730,29 @@ function deshacerRealizado(btn, titulo, fecha, pipClass, tagClass, tagText){
   showToast('↩ Recordatorio vuelto a pendientes');
 }
 
+function borrarRem(btn){
+  const item = btn.closest('.rem-item');
+  item.style.transition = 'opacity 0.2s, transform 0.2s';
+  item.style.opacity = '0';
+  item.style.transform = 'translateX(20px)';
+  setTimeout(()=>{
+    item.remove();
+    refreshRemCount();
+    syncGuardar('recordatorios');
+  }, 200);
+}
+
+function borrarReal(btn){
+  const item = btn.closest('.real-item');
+  item.style.transition = 'opacity 0.2s, transform 0.2s';
+  item.style.opacity = '0';
+  item.style.transform = 'translateX(20px)';
+  setTimeout(()=>{
+    item.remove();
+    refreshRealCount();
+    syncGuardar('recordatorios');
+  }, 200);
+}
 function refreshRemCount(){
   const n = document.querySelectorAll('#rem-list .rem-item').length;
   document.getElementById('rem-count').textContent = n===0 ? 'Al día ✓' : `${n} item${n>1?'s':''}`;
@@ -1727,7 +1774,7 @@ function addRem(){
   const fs=fecha?new Date(fecha+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long'}):'';
   const div=document.createElement('div');
   div.className='rem-item';
-  div.innerHTML=`<div class="rem-pip ${pmap[urg]}"></div><div class="rem-body"><div class="rem-title">${titulo}</div><div class="rem-date">${fs}</div></div>${tmap[urg]}<div class="rem-chk" onclick="marcarHecho(this)"></div>`;
+  div.innerHTML=`<div class="rem-pip ${pmap[urg]}"></div><div class="rem-body"><div class="rem-title">${titulo}</div><div class="rem-date">${fs}</div></div>${tmap[urg]}<div class="rem-chk" onclick="marcarHecho(this)"></div><button class="btn-borrar-rem" onclick="borrarRem(this)" title="Borrar">✕</button>`;
   document.getElementById('rem-list').prepend(div);
   document.getElementById('rem-titulo').value='';
   document.getElementById('rem-fecha').value='';
