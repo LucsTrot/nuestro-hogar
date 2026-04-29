@@ -599,11 +599,11 @@ body{
     <!-- HERO: POZO COMÚN -->
     <div class="hero">
       <div class="hero-eyebrow">pozo común del hogar</div>
-      <div class="hero-amount" id="balance">$700.000</div>
+      <div class="hero-amount" id="balance">$0</div>
       <div style="font-size:11px;color:var(--muted);margin-top:4px;margin-bottom:16px;" id="balance-hint">disponible para gastos</div>
       <div class="hero-divider"></div>
       <div class="hero-row">
-        <div class="hero-stat"><strong class="acento" id="ingresos-total">$700.000</strong>Ingresado</div>
+        <div class="hero-stat"><strong class="acento" id="ingresos-total">$0</strong>Ingresado</div>
         <div class="hero-stat"><strong class="rosa" id="gastos-total">$0</strong>Gastado</div>
         <div class="hero-stat" id="bal-acum-wrap" style="display:none;">
           <strong id="bal-acum" class="lila">$0</strong>Balance anterior
@@ -616,13 +616,13 @@ body{
       <div class="stat-card">
         <div class="stat-icon si-lila">👤</div>
         <div class="stat-label">Lucas aportó</div>
-        <div class="stat-val sv-lila" id="lucas-stat">$300.000</div>
+        <div class="stat-val sv-lila" id="lucas-stat">$0</div>
         <div class="stat-hint">Este mes</div>
       </div>
       <div class="stat-card">
         <div class="stat-icon si-rosa">👤</div>
         <div class="stat-label">Sol aportó</div>
-        <div class="stat-val sv-rosa" id="sol-stat">$400.000</div>
+        <div class="stat-val sv-rosa" id="sol-stat">$0</div>
         <div class="stat-hint">Este mes</div>
       </div>
       <div class="stat-card">
@@ -645,11 +645,8 @@ body{
         Movimientos del mes
         <span id="mes-label" style="font-size:11px;font-weight:400;color:var(--muted);">Mayo 2025</span>
       </div>
-      <div id="tx-list">
-        <div class="tx-item"><div class="tx-icon">💼</div><div class="tx-body"><div class="tx-name">Sueldo Lucas</div><div class="tx-sub">Lucas · ingreso al pozo</div></div><div class="tx-amt tx-pos">+$300.000</div></div>
-        <div class="tx-item"><div class="tx-icon">💼</div><div class="tx-body"><div class="tx-name">Sueldo Sol</div><div class="tx-sub">Sol · ingreso al pozo</div></div><div class="tx-amt tx-pos">+$400.000</div></div>
-      </div>
-      <div id="tx-empty" style="display:none;text-align:center;padding:20px 0;font-size:12px;color:var(--hint);">Sin movimientos este mes</div>
+      <div id="tx-list"></div>
+      <div id="tx-empty" style="text-align:center;padding:20px 0;font-size:12px;color:var(--hint);">Sin movimientos este mes</div>
     </div>
 
     <!-- CIERRE DE MES -->
@@ -676,18 +673,7 @@ body{
         <div class="prog-row"><span id="prog-text">0 de 7 comprados</span><span id="prog-pct">0%</span></div>
         <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
       </div>
-      <div id="super-list">
-        <div class="cat-header">🥦 Verduras y frutas</div>
-        <div class="super-item"><div class="chk" onclick="toggleChk(this)"></div><div class="item-name">Tomates</div><div class="item-qty">x1 kg</div></div>
-        <div class="super-item"><div class="chk" onclick="toggleChk(this)"></div><div class="item-name">Lechuga</div><div class="item-qty">x1</div></div>
-        <div class="super-item"><div class="chk" onclick="toggleChk(this)"></div><div class="item-name">Zanahorias</div><div class="item-qty">x500g</div></div>
-        <div class="cat-header">🥛 Lácteos</div>
-        <div class="super-item"><div class="chk" onclick="toggleChk(this)"></div><div class="item-name">Leche entera</div><div class="item-qty">x3</div></div>
-        <div class="super-item"><div class="chk" onclick="toggleChk(this)"></div><div class="item-name">Yogur natural</div><div class="item-qty">x2</div></div>
-        <div class="cat-header">🍞 Almacén</div>
-        <div class="super-item"><div class="chk" onclick="toggleChk(this)"></div><div class="item-name">Arroz largo fino</div><div class="item-qty">x1 kg</div></div>
-        <div class="super-item"><div class="chk" onclick="toggleChk(this)"></div><div class="item-name">Fideos spaghetti</div><div class="item-qty">x2</div></div>
-      </div>
+      <div id="super-list"></div>
       <div class="confirm-bar">
         <button class="btn-confirmar" id="btn-confirmar" onclick="confirmarCompra()" disabled>
           ✓ Confirmar compra
@@ -759,37 +745,8 @@ body{
         Pendientes
         <span id="rem-count" style="font-size:11px;font-weight:400;color:var(--muted);">4 items</span>
       </div>
-      <div id="rem-list">
-        <div class="rem-item">
-          <div class="rem-pip pip-red"></div>
-          <div class="rem-body"><div class="rem-title">Pagar expensas</div><div class="rem-date">Vence 30 abril</div></div>
-          <div class="rem-tag tag-u">Urgente</div>
-          <div class="rem-chk" onclick="marcarHecho(this)"></div>
-          <button class="btn-borrar-rem" onclick="borrarRem(this)" title="Borrar">✕</button>
-        </div>
-        <div class="rem-item">
-          <div class="rem-pip pip-rosa"></div>
-          <div class="rem-body"><div class="rem-title">Renovar contrato de alquiler</div><div class="rem-date">Para el 15 mayo</div></div>
-          <div class="rem-tag tag-p">Pronto</div>
-          <div class="rem-chk" onclick="marcarHecho(this)"></div>
-          <button class="btn-borrar-rem" onclick="borrarRem(this)" title="Borrar">✕</button>
-        </div>
-        <div class="rem-item">
-          <div class="rem-pip pip-lila"></div>
-          <div class="rem-body"><div class="rem-title">Cambiar filtro del agua</div><div class="rem-date">Antes de fin de mes</div></div>
-          <div class="rem-tag tag-n">Normal</div>
-          <div class="rem-chk" onclick="marcarHecho(this)"></div>
-          <button class="btn-borrar-rem" onclick="borrarRem(this)" title="Borrar">✕</button>
-        </div>
-        <div class="rem-item">
-          <div class="rem-pip pip-lila"></div>
-          <div class="rem-body"><div class="rem-title">Turno veterinario</div><div class="rem-date">5 mayo</div></div>
-          <div class="rem-tag tag-n">Normal</div>
-          <div class="rem-chk" onclick="marcarHecho(this)"></div>
-          <button class="btn-borrar-rem" onclick="borrarRem(this)" title="Borrar">✕</button>
-        </div>
-      </div>
-      <div id="rem-empty" style="display:none;text-align:center;padding:24px 0;color:var(--muted);font-size:13px;">
+      <div id="rem-list"></div>
+      <div id="rem-empty" style="text-align:center;padding:24px 0;color:var(--muted);font-size:13px;">
         ✓ Sin pendientes por ahora
       </div>
     </div>
@@ -1757,8 +1714,7 @@ function refreshRemCount(){
   const n = document.querySelectorAll('#rem-list .rem-item').length;
   document.getElementById('rem-count').textContent = n===0 ? 'Al día ✓' : `${n} item${n>1?'s':''}`;
   document.getElementById('rem-empty').style.display = n===0 ? 'block' : 'none';
-}
-function refreshRealCount(){
+}function refreshRealCount(){
   const n = document.querySelectorAll('#real-list .real-item').length;
   document.getElementById('real-count').textContent = `${n} item${n>1?'s':''}`;
   if(n===0) document.getElementById('card-realizados').style.display='none';
