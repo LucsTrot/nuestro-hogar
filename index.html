@@ -40,6 +40,39 @@
   --red:#e87070;
   --nav-h:82px;
   --top-h:64px;
+
+  /* ── ACENTO: por defecto Lucas = lila ── */
+  --acento:        #b388d4;
+  --acento-light:  rgba(179,136,212,0.15);
+  --acento-glow:   rgba(179,136,212,0.25);
+  --acento-border: rgba(179,136,212,0.22);
+  --acento-grad:   linear-gradient(135deg,#7b6ed4,#b388d4);
+  --acento2:       #e896b0;   /* color secundario del otro usuario */
+  --acento2-light: rgba(232,150,176,0.13);
+}
+
+/* ── TEMA SOL: rosa ── */
+body.tema-sol{
+  --acento:        #e896b0;
+  --acento-light:  rgba(232,150,176,0.13);
+  --acento-glow:   rgba(232,150,176,0.22);
+  --acento-border: rgba(232,150,176,0.2);
+  --acento-grad:   linear-gradient(135deg,#e896b0,#d4688a);
+  --acento2:       #b388d4;
+  --acento2-light: rgba(179,136,212,0.15);
+}
+
+/* Avatar: siempre sigue el acento del usuario activo */
+.avatar-btn{ background:var(--acento-grad) !important; }
+
+/* Transición suave al cambiar tema */
+body{
+  transition: --acento 0.3s;
+}
+.hero, .nav-btn, .fab, .btn-ok, .btn-confirmar,
+.chk, .rem-chk, .real-check-done, .day-chip.selected,
+.avatar-btn, .prog-fill{
+  transition: background 0.35s ease, border-color 0.35s ease, color 0.35s ease;
 }
 html,body{height:100%;overflow:hidden;}
 body{
@@ -72,7 +105,7 @@ body{
   letter-spacing:-0.2px;
 }
 .top-title em{font-style:italic;
-  background:linear-gradient(90deg,var(--lila),var(--rosa));
+  background:linear-gradient(90deg,var(--acento),var(--acento2));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
 .topbar-right{display:flex;align-items:center;gap:8px;}
@@ -85,7 +118,7 @@ body{
 .top-btn:hover{background:var(--bg4);}
 .avatar-btn{
   width:36px;height:36px;border-radius:50%;
-  background:linear-gradient(135deg,#7b6ed4,var(--lila));
+  background:var(--acento-grad);
   display:flex;align-items:center;justify-content:center;
   font-size:13px;font-weight:700;color:white;
   border:2px solid var(--bg3);cursor:pointer;
@@ -93,7 +126,7 @@ body{
   transition:all 0.2s;
 }
 .avatar-btn.sol{background:linear-gradient(135deg,var(--rosa),#d4688a);}
-.user-btn.activo{border-color:var(--lila);background:var(--lila-light);}
+.user-btn.activo{border-color:var(--acento);background:var(--acento-light);}
 .user-btn.activo.sol-activo{border-color:var(--rosa);background:var(--rosa-light);}
 
 /* ── SCROLL ── */
@@ -131,7 +164,7 @@ body{
 /* ── HERO BALANCE ── */
 .hero{
   background:var(--bg2);
-  border:1px solid var(--border-lila);
+  border:1px solid var(--acento-border);
   border-radius:24px;
   padding:24px 22px;
   margin-bottom:12px;
@@ -140,13 +173,13 @@ body{
 .hero::before{
   content:'';position:absolute;top:-60px;right:-60px;
   width:180px;height:180px;border-radius:50%;
-  background:radial-gradient(circle,var(--lila-glow) 0%,transparent 70%);
+  background:radial-gradient(circle,var(--acento-glow) 0%,transparent 70%);
   pointer-events:none;
 }
 .hero::after{
   content:'';position:absolute;bottom:-50px;left:-40px;
   width:150px;height:150px;border-radius:50%;
-  background:radial-gradient(circle,var(--rosa-glow) 0%,transparent 70%);
+  background:radial-gradient(circle,var(--acento2-light) 0%,transparent 70%);
   pointer-events:none;
 }
 .hero-eyebrow{font-size:10px;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:8px;}
@@ -173,11 +206,11 @@ body{
   display:flex;align-items:center;justify-content:center;
   font-size:14px;margin-bottom:10px;
 }
-.si-lila{background:var(--lila-light);}
+.si-lila{background:var(--acento-light);}
 .si-rosa{background:var(--rosa-light);}
 .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:4px;}
 .stat-val{font-size:20px;font-weight:600;letter-spacing:-0.5px;}
-.sv-lila{color:var(--lila);}
+.sv-lila{color:var(--acento);}
 .sv-rosa{color:var(--rosa);}
 .sv-green{color:var(--green);}
 .stat-hint{font-size:10px;color:var(--muted);margin-top:3px;}
@@ -203,7 +236,7 @@ body{
 /* ── PROGRESO SUPER ── */
 .prog-wrap{margin-bottom:14px;}
 .prog-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:7px;}
-.prog-row span:last-child{color:var(--lila);font-weight:500;}
+.prog-row span:last-child{color:var(--acento);font-weight:500;}
 .prog-bar{height:3px;background:var(--bg4);border-radius:100px;overflow:hidden;}
 .prog-fill{
   height:100%;border-radius:100px;
@@ -222,7 +255,7 @@ body{
   display:flex;align-items:center;justify-content:center;
   font-size:10px;color:var(--bg);transition:all 0.15s;
 }
-.chk.done{background:linear-gradient(135deg,var(--lila),var(--rosa));border-color:transparent;}
+.chk.done{background:var(--acento-grad);border-color:transparent;}
 .item-name{flex:1;font-size:13px;color:var(--text);}
 .item-name.done{text-decoration:line-through;color:var(--hint);}
 .item-qty{font-size:10px;color:var(--muted);background:var(--bg4);padding:2px 9px;border-radius:100px;}
@@ -235,7 +268,7 @@ body{
 .real-item:last-child{border-bottom:none;}
 .real-check-done{
   width:22px;height:22px;border-radius:50%;flex-shrink:0;
-  background:linear-gradient(135deg,var(--lila),var(--rosa));
+  background:var(--acento-grad);
   display:flex;align-items:center;justify-content:center;
   font-size:10px;color:white;margin-top:2px;
 }
@@ -244,12 +277,12 @@ body{
 .real-date{font-size:11px;color:var(--hint);margin-top:2px;}
 .real-quien{
   display:inline-flex;align-items:center;gap:5px;
-  background:var(--lila-light);border:1px solid var(--border-lila);
+  background:var(--acento-light);border:1px solid var(--acento-border);
   border-radius:100px;padding:3px 10px;
-  font-size:10px;color:var(--lila);font-weight:500;margin-top:5px;
+  font-size:10px;color:var(--acento);font-weight:500;margin-top:5px;
 }
 .real-quien.sol{background:var(--rosa-light);border-color:var(--border-rosa);color:var(--rosa);}
-.real-quien-dot{width:6px;height:6px;border-radius:50%;background:var(--lila);}
+.real-quien-dot{width:6px;height:6px;border-radius:50%;background:var(--acento);}
 .real-quien.sol .real-quien-dot{background:var(--rosa);}
 .btn-deshacer{
   background:transparent;border:none;
@@ -269,7 +302,7 @@ body{
 .user-picker-overlay.open{display:flex;}
 .user-picker-box{
   background:var(--bg2);border-radius:28px 28px 0 0;
-  border-top:1px solid var(--border-lila);
+  border-top:1px solid var(--acento-border);
   padding:16px 20px 40px;width:100%;max-width:430px;
 }
 .user-picker-title{
@@ -303,7 +336,7 @@ body{
 }
 .btn-confirmar{
   width:100%;
-  background:linear-gradient(135deg,var(--lila),var(--rosa));
+  background:var(--acento-grad);
   color:white;border:none;border-radius:14px;
   padding:14px;font-family:'Sora',sans-serif;
   font-size:14px;font-weight:600;cursor:pointer;
@@ -354,9 +387,9 @@ body{
   border-radius:14px;padding:9px 4px;text-align:center;
   cursor:pointer;transition:all 0.15s;
 }
-.day-chip.today{border-color:var(--border-lila);background:var(--lila-light);}
+.day-chip.today{border-color:var(--acento-border);background:var(--acento-light);}
 .day-chip.selected{
-  background:linear-gradient(135deg,var(--lila),var(--rosa));
+  background:var(--acento-grad);
   border-color:transparent;
 }
 .day-chip.selected .dn,.day-chip.selected .dd{color:white;}
@@ -391,14 +424,14 @@ body{
 .rem-tag{font-size:10px;padding:3px 10px;border-radius:100px;flex-shrink:0;}
 .tag-u{background:rgba(232,112,112,0.12);color:var(--red);}
 .tag-p{background:var(--rosa-light);color:var(--rosa);}
-.tag-n{background:var(--lila-light);color:var(--lila);}
+.tag-n{background:var(--acento-light);color:var(--acento);}
 .rem-chk{
   width:22px;height:22px;border-radius:50%;
   border:1.5px solid var(--hint);cursor:pointer;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
   font-size:10px;color:var(--bg);transition:all 0.15s;
 }
-.rem-chk.done{background:linear-gradient(135deg,var(--lila),var(--rosa));border-color:transparent;}
+.rem-chk.done{background:var(--acento-grad);border-color:transparent;}
 
 /* ── BOTTOM NAV ── */
 .bottom-nav{
@@ -426,8 +459,8 @@ body{
   content:'';position:absolute;inset:6px;
   border-radius:14px;background:transparent;transition:background 0.15s;
 }
-.nav-btn.active::before{background:var(--lila-light);}
-.nav-btn.active{color:var(--lila);}
+.nav-btn.active::before{background:var(--acento-light);}
+.nav-btn.active{color:var(--acento);}
 .nav-btn:hover:not(.active){color:var(--text);}
 .nav-icon{font-size:19px;line-height:1;position:relative;z-index:1;}
 .nav-label{position:relative;z-index:1;}
@@ -437,14 +470,14 @@ body{
   position:fixed;
   bottom:calc(82px + 16px);right:20px;
   width:50px;height:50px;border-radius:50%;
-  background:linear-gradient(135deg,var(--lila),var(--rosa));
+  background:var(--acento-grad);
   color:white;border:none;font-size:22px;
   cursor:pointer;z-index:200;
-  box-shadow:0 4px 20px var(--rosa-glow);
+  box-shadow:0 4px 20px var(--acento-glow);
   display:flex;align-items:center;justify-content:center;
   transition:transform 0.15s,box-shadow 0.15s;
 }
-.fab:hover{transform:scale(1.08);box-shadow:0 6px 28px var(--lila-glow);}
+.fab:hover{transform:scale(1.08);box-shadow:0 6px 28px var(--acento-glow);}
 
 /* ── CALENDARIO MENSUAL ── */
 .cal-cell{
@@ -460,7 +493,7 @@ body{
 }
 .cal-cell:hover{border-color:var(--border-lila);}
 .cal-cell.vacio{background:transparent;border-color:transparent;cursor:default;}
-.cal-cell.hoy{border-color:var(--lila);background:var(--lila-light);}
+.cal-cell.hoy{border-color:var(--acento);background:var(--acento-light);}
 .cal-cell.seleccionado{background:linear-gradient(135deg,var(--lila),var(--rosa));border-color:transparent;}
 .cal-cell.seleccionado .cal-num{color:white;}
 .cal-cell.finde .cal-num{color:var(--rosa);}
@@ -468,7 +501,7 @@ body{
 .cal-num{font-size:12px;font-weight:500;color:var(--text);line-height:1;}
 .cal-dot{
   width:3px;height:3px;border-radius:50%;
-  background:linear-gradient(135deg,var(--lila),var(--rosa));
+  background:linear-gradient(135deg,var(--acento),var(--acento2));
   margin-top:2px;
 }
 
@@ -551,7 +584,7 @@ body{
       <div style="font-size:11px;color:var(--muted);margin-top:4px;margin-bottom:16px;" id="balance-hint">disponible para gastos</div>
       <div class="hero-divider"></div>
       <div class="hero-row">
-        <div class="hero-stat"><strong class="lila" id="ingresos-total">$700.000</strong>Ingresado</div>
+        <div class="hero-stat"><strong class="acento" id="ingresos-total">$700.000</strong>Ingresado</div>
         <div class="hero-stat"><strong class="rosa" id="gastos-total">$0</strong>Gastado</div>
         <div class="hero-stat" id="bal-acum-wrap" style="display:none;">
           <strong id="bal-acum" class="lila">$0</strong>Balance anterior
@@ -601,7 +634,7 @@ body{
     </div>
 
     <!-- CIERRE DE MES -->
-    <div class="card" style="border-color:var(--border-lila);">
+    <div class="card" style="border-color:var(--acento-border);">
       <div class="card-title" style="margin-bottom:8px;">Cierre de mes</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">
         Al cerrar el mes, los ingresos y gastos vuelven a cero. El saldo restante queda como balance acumulado del hogar.
@@ -865,7 +898,7 @@ body{
       <div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--white);margin-bottom:6px;">Cierre de mes</div>
       <div id="cierre-detalle" style="font-size:13px;color:var(--muted);line-height:1.7;"></div>
     </div>
-    <div class="card" id="cierre-resumen" style="margin-bottom:14px;background:var(--bg3);border-color:var(--border-lila);">
+    <div class="card" id="cierre-resumen" style="margin-bottom:14px;background:var(--bg3);border-color:var(--acento-border);">
       <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
         <span style="font-size:12px;color:var(--muted);">Ingresado este mes</span>
         <span style="font-size:13px;font-weight:600;color:var(--lila);" id="cierre-ing">$0</span>
@@ -1111,9 +1144,9 @@ function mostrarCargando(show){
       overlay.innerHTML = `
         <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:300;color:var(--white);">nuestro <em style="font-style:italic;background:linear-gradient(90deg,var(--lila),var(--rosa));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">hogar</em></div>
         <div style="display:flex;gap:6px;">
-          <div style="width:8px;height:8px;border-radius:50%;background:var(--lila);animation:pulse 1s infinite 0s;"></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--acento);animation:pulse 1s infinite 0s;"></div>
           <div style="width:8px;height:8px;border-radius:50%;background:var(--rosa);animation:pulse 1s infinite 0.2s;"></div>
-          <div style="width:8px;height:8px;border-radius:50%;background:var(--lila);animation:pulse 1s infinite 0.4s;"></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--acento);animation:pulse 1s infinite 0.4s;"></div>
         </div>
         <div style="font-size:12px;color:var(--muted);">Sincronizando...</div>
         <style>@keyframes pulse{0%,100%{opacity:0.3;transform:scale(0.8);}50%{opacity:1;transform:scale(1.2);}}</style>
@@ -1265,20 +1298,29 @@ let usuarioActivo = 'Lucas';
 function setUsuario(nombre){
   usuarioActivo = nombre;
   const esSol = nombre === 'Sol';
+
+  // ── CAMBIAR TEMA VISUAL ──
+  document.body.classList.toggle('tema-sol', esSol);
+
   // Avatar
   const av = document.getElementById('avatar-btn');
   av.textContent = nombre[0];
+  // El color del avatar lo maneja el tema (--acento-grad)
   av.classList.toggle('sol', esSol);
+
   // Saludo en inicio — el elemento solo existe cuando está renderizado en finanzas
   const topNombre = document.getElementById('top-nombre');
   if(topNombre) topNombre.textContent = nombre;
+
   // Destacar botón activo en el switch modal
   document.getElementById('switch-lucas').classList.toggle('activo', !esSol);
   document.getElementById('switch-lucas').classList.remove('sol-activo');
   document.getElementById('switch-sol').classList.toggle('activo', esSol);
   document.getElementById('switch-sol').classList.toggle('sol-activo', esSol);
+
   closeUserSwitch();
   showToast(`Hola ${nombre} 👋`);
+
   // Refrescar el título del topbar si estamos en finanzas
   if(S.section==='finanzas'){
     document.getElementById('top-title').innerHTML=`Hola <em id="top-nombre">${nombre}</em> 👋`;
@@ -1701,7 +1743,7 @@ syncCargar();
 // ── SERVICE WORKER ──
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('service-worker.js')
+    navigator.serviceWorker.register('/nuestro-hogar/service-worker.js', { scope: '/nuestro-hogar/' })
       .then(()=> console.log('SW registrado'))
       .catch(e => console.warn('SW error:', e));
   });

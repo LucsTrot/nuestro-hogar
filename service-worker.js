@@ -1,8 +1,10 @@
 const CACHE = 'nuestro-hogar-v1';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json'
+  '/nuestro-hogar/',
+  '/nuestro-hogar/index.html',
+  '/nuestro-hogar/manifest.json',
+  '/nuestro-hogar/icon-192.png',
+  '/nuestro-hogar/icon-512.png'
 ];
 
 // Instalación: cachear archivos base
@@ -34,13 +36,12 @@ self.addEventListener('fetch', e => {
     caches.match(e.request).then(cached => {
       if(cached) return cached;
       return fetch(e.request).then(response => {
-        // Cachear respuestas válidas
         if(response && response.status === 200 && response.type === 'basic') {
           const copy = response.clone();
           caches.open(CACHE).then(cache => cache.put(e.request, copy));
         }
         return response;
       });
-    }).catch(() => caches.match('/index.html'))
+    }).catch(() => caches.match('/nuestro-hogar/index.html'))
   );
 });
