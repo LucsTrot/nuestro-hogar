@@ -498,7 +498,56 @@ body{
 }
 .fab:hover{transform:scale(1.08);box-shadow:0 6px 28px var(--acento-glow);}
 
-/* ── CALENDARIO MENSUAL ── */
+/* ── HISTORIAL ── */
+.hist-item{
+  padding:14px 0;
+  border-bottom:1px solid var(--border);
+}
+.hist-item:last-child{border-bottom:none;}
+.hist-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;cursor:pointer;
+}
+.hist-mes{
+  font-size:14px;font-weight:600;color:var(--white);
+}
+.hist-saldo{
+  font-size:14px;font-weight:600;
+}
+.hist-saldo.pos{color:var(--green);}
+.hist-saldo.neg{color:var(--rosa);}
+.hist-detalle{
+  display:none;
+  background:var(--bg3);
+  border-radius:12px;
+  padding:12px 14px;
+  margin-top:4px;
+}
+.hist-detalle.open{display:block;}
+.hist-row{
+  display:flex;justify-content:space-between;
+  font-size:12px;padding:4px 0;
+  border-bottom:1px solid var(--border);
+}
+.hist-row:last-child{border-bottom:none;}
+.hist-row-label{color:var(--muted);}
+.hist-row-val{font-weight:500;color:var(--text);}
+.hist-row-val.pos{color:var(--green);}
+.hist-row-val.neg{color:var(--rosa);}
+.hist-row-val.acento{color:var(--acento);}
+.hist-chevron{
+  font-size:12px;color:var(--muted);
+  transition:transform 0.2s;
+}
+.hist-chevron.open{transform:rotate(180deg);}
+.hist-txs{margin-top:8px;}
+.hist-tx{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:11px;padding:3px 0;color:var(--muted);
+}
+.hist-tx span:last-child{font-weight:500;}
+.hist-tx span.pos{color:var(--green);}
+.hist-tx span.neg{color:var(--rosa);}
 .cal-cell{
   aspect-ratio:1;
   border-radius:8px;
@@ -658,6 +707,15 @@ body{
       <button class="btn-confirmar" onclick="abrirCierreMes()" style="font-size:14px;">
         📅 Cerrar mes y empezar de cero
       </button>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div class="card" id="card-historial" style="display:none;">
+      <div class="card-title">
+        Historial
+        <span style="font-size:11px;font-weight:400;color:var(--muted);" id="historial-count">0 meses</span>
+      </div>
+      <div id="historial-list"></div>
     </div>
 
   </div>
@@ -999,7 +1057,7 @@ function syncGuardar(tabla){
   clearTimeout(_syncTimer);
   _syncTimer = setTimeout(async ()=>{
     if(tabla === 'finanzas' || !tabla){
-      await gsGuardar('finanzas', { txs: S.txs, balanceAcumulado: S.balanceAcumulado });
+      await gsGuardar('finanzas', { txs: S.txs, balanceAcumulado: S.balanceAcumulado, historial: S.historial||[] });
     }
     if(tabla === 'comidas' || !tabla){
       await gsGuardar('comidas', S.meals);
@@ -1054,6 +1112,7 @@ async function syncCargar(){
   if(finanzas){
     S.txs = finanzas.txs || [];
     S.balanceAcumulado = finanzas.balanceAcumulado || 0;
+    S.historial = finanzas.historial || [];
     // Reconstruir DOM de transacciones
     const list = document.getElementById('tx-list');
     list.innerHTML = '';
@@ -1112,6 +1171,7 @@ async function syncCargar(){
   refreshRemCount();
   refreshRealCount();
   renderCalendario();
+  renderHistorial();
 }
 
 function mostrarCargando(show){
@@ -1256,20 +1316,145 @@ function abrirCierreMes(){
 }
 
 function ejecutarCierreMes(){
-  let inc=0, exp=0;
-  S.txs.forEach(t=>{ if(t.t==='ingreso') inc+=t.m; else exp+=t.m; });
+  let inc=0, exp=0, luc=0, sol=0;
+  const cats={};
+  S.txs.forEach(t=>{
+    if(t.t==='ingreso'){
+      inc+=t.m;
+      if(t.q==='Lucas') luc+=t.m; else sol+=t.m;
+    } else {
+      exp+=t.m;
+      cats[t.c]=(cats[t.c]||0)+t.m;
+    }
+  });
   const saldoMes = inc - exp;
-  // Acumular al balance anterior
-  S.balanceAcumulado = S.balanceAcumulado + saldoMes;
+  const balAnterior = S.balanceAcumulado;
+  S.balanceAcumulado = balAnterior + saldoMes;
+
+  // ── GUARDAR EN HISTORIAL ──
+  const ahora = new Date();
+  const mesNombre = ahora.toLocaleDateString('es-AR',{month:'long',year:'numeric'});
+  const entrada = {
+    mes: mesNombre.charAt(0).toUpperCase()+mesNombre.slice(1),
+    fecha: ahora.toISOString(),
+    ingresado: inc,
+    gastado: exp,
+    saldoMes,
+    balAnterior,
+    balFinal: S.balanceAcumulado,
+    lucas: luc,
+    sol,
+    cats,
+    txs: [...S.txs]
+  };
+  S.historial = S.historial || [];
+  S.historial.unshift(entrada); // más reciente primero
+
   // Limpiar txs del mes
   S.txs = [];
   document.getElementById('tx-list').innerHTML='';
   document.getElementById('cierre-overlay').classList.remove('open');
   refreshFinanzas();
+  renderHistorial();
   const mesActual = new Date().toLocaleDateString('es-AR',{month:'long',year:'numeric'});
   document.getElementById('mes-label').textContent = mesActual.charAt(0).toUpperCase()+mesActual.slice(1);
   syncGuardar('finanzas');
   showToast(`✓ Mes cerrado · Balance: ${fmt(S.balanceAcumulado)}`);
+}
+
+// ── HISTORIAL ──
+function renderHistorial(){
+  const historial = S.historial || [];
+  const card = document.getElementById('card-historial');
+  const list = document.getElementById('historial-list');
+  const count = document.getElementById('historial-count');
+
+  if(historial.length === 0){
+    card.style.display='none';
+    return;
+  }
+
+  card.style.display='block';
+  count.textContent = `${historial.length} mes${historial.length>1?'es':''}`;
+  list.innerHTML='';
+
+  historial.forEach((h, idx)=>{
+    const saldoPos = h.saldoMes >= 0;
+    const balPos   = h.balFinal >= 0;
+
+    // Cat principal
+    const catKeys = Object.keys(h.cats||{});
+    const topCat  = catKeys.length ? catKeys.reduce((a,b)=>(h.cats[a]>h.cats[b]?a:b)) : '—';
+
+    // Movimientos del mes (máx 5 para no saturar)
+    const txsPreview = (h.txs||[]).slice(0,6);
+
+    const div = document.createElement('div');
+    div.className='hist-item';
+    div.innerHTML=`
+      <div class="hist-header" onclick="toggleHistDetalle(${idx})">
+        <div>
+          <div class="hist-mes">${h.mes}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px;">
+            ${fmt(h.ingresado)} ingresado · ${fmt(h.gastado)} gastado
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="hist-saldo ${saldoPos?'pos':'neg'}">${saldoPos?'+':''}${fmt(h.saldoMes)}</div>
+          <div class="hist-chevron" id="chev-${idx}">▾</div>
+        </div>
+      </div>
+      <div class="hist-detalle" id="det-${idx}">
+        <div class="hist-row">
+          <span class="hist-row-label">Lucas aportó</span>
+          <span class="hist-row-val acento">${fmt(h.lucas)}</span>
+        </div>
+        <div class="hist-row">
+          <span class="hist-row-label">Sol aportó</span>
+          <span class="hist-row-val" style="color:var(--rosa);">${fmt(h.sol)}</span>
+        </div>
+        <div class="hist-row">
+          <span class="hist-row-label">Total ingresado</span>
+          <span class="hist-row-val pos">${fmt(h.ingresado)}</span>
+        </div>
+        <div class="hist-row">
+          <span class="hist-row-label">Total gastado</span>
+          <span class="hist-row-val neg">${fmt(h.gastado)}</span>
+        </div>
+        <div class="hist-row">
+          <span class="hist-row-label">Cat. principal</span>
+          <span class="hist-row-val">${topCat} ${catKeys.length?fmt(h.cats[topCat]):''}</span>
+        </div>
+        <div class="hist-row">
+          <span class="hist-row-label">Balance anterior</span>
+          <span class="hist-row-val ${h.balAnterior>=0?'pos':'neg'}">${fmt(h.balAnterior)}</span>
+        </div>
+        <div class="hist-row">
+          <span class="hist-row-label" style="font-weight:600;color:var(--white);">Balance final</span>
+          <span class="hist-row-val ${balPos?'pos':'neg'}" style="font-size:14px;">${fmt(h.balFinal)}</span>
+        </div>
+        ${txsPreview.length>0?`
+        <div class="hist-txs">
+          <div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:1px;padding:8px 0 4px;">Movimientos</div>
+          ${txsPreview.map(t=>`
+            <div class="hist-tx">
+              <span>${t.c} ${t.d} <span style="opacity:0.5;">· ${t.q}</span></span>
+              <span class="${t.t==='ingreso'?'pos':'neg'}">${t.t==='ingreso'?'+':'-'}${fmt(t.m)}</span>
+            </div>
+          `).join('')}
+          ${h.txs.length>6?`<div style="font-size:10px;color:var(--hint);padding-top:4px;">+${h.txs.length-6} más...</div>`:''}
+        </div>`:''}
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function toggleHistDetalle(idx){
+  const det  = document.getElementById(`det-${idx}`);
+  const chev = document.getElementById(`chev-${idx}`);
+  det.classList.toggle('open');
+  chev.classList.toggle('open');
 }
 
 // ── USUARIO ACTIVO ──
@@ -1741,7 +1926,138 @@ function addRem(){
 
 // ── INICIO ──
 onTipoChange();
-syncCargar();
+
+// ── POLLING EN TIEMPO REAL ──
+const POLL_INTERVAL = 12000; // cada 12 segundos
+let _pollTimer = null;
+let _lastSyncHash = ''; // para detectar cambios reales
+
+function iniciarPolling(){
+  _pollTimer = setInterval(async ()=>{
+    // Solo sincronizar si la app está visible (no en background)
+    if(document.hidden) return;
+    // No sincronizar si hay una sincronización activa o reciente
+    if(_syncTimer) return;
+    await syncSilenciosa();
+  }, POLL_INTERVAL);
+}
+
+// Sincronización silenciosa (sin spinner, solo actualiza si hay cambios)
+async function syncSilenciosa(){
+  try {
+    mostrarIndicadorSync(true);
+    const [finanzas, superData, recs] = await Promise.all([
+      gsLeer('finanzas'),
+      gsLeer('super'),
+      gsLeer('recordatorios')
+    ]);
+
+    // Crear hash para detectar si realmente cambió algo
+    const nuevoHash = JSON.stringify({finanzas, superData, recs});
+    if(nuevoHash === _lastSyncHash){
+      mostrarIndicadorSync(false);
+      return; // nada cambió, no tocar el DOM
+    }
+    _lastSyncHash = nuevoHash;
+
+    // Finanzas
+    if(finanzas && JSON.stringify({txs:S.txs, bal:S.balanceAcumulado}) !== JSON.stringify({txs:finanzas.txs, bal:finanzas.balanceAcumulado})){
+      S.txs = finanzas.txs || [];
+      S.balanceAcumulado = finanzas.balanceAcumulado || 0;
+      const list = document.getElementById('tx-list');
+      list.innerHTML = '';
+      S.txs.forEach(t=>{
+        const div=document.createElement('div');
+        div.className='tx-item';
+        div.innerHTML=`<div class="tx-icon">${t.c}</div><div class="tx-body"><div class="tx-name">${t.d}</div><div class="tx-sub">${t.q} · ${t.t==='ingreso'?'ingreso al pozo':'Del pozo'}</div></div><div class="tx-amt ${t.t==='ingreso'?'tx-pos':'tx-neg'}">${t.t==='ingreso'?'+':'-'}${fmt(t.m)}</div>`;
+        list.appendChild(div);
+      });
+      refreshFinanzas();
+    }
+
+    // Super
+    if(superData && superData.length >= 0){
+      const superList = document.getElementById('super-list');
+      superList.innerHTML = '';
+      superData.forEach(item=>{
+        const div=document.createElement('div');
+        div.className='super-item';
+        div.innerHTML=`<div class="chk${item.done?' done':''}" onclick="toggleChk(this)">${item.done?'✓':''}</div><div class="item-name${item.done?' done':''}">${item.nombre}</div><div class="item-qty">${item.cantidad}</div>`;
+        superList.appendChild(div);
+      });
+      updateProg();
+    }
+
+    // Recordatorios
+    if(recs){
+      const remList = document.getElementById('rem-list');
+      const realList = document.getElementById('real-list');
+      if(recs.pend){
+        remList.innerHTML = '';
+        recs.pend.forEach(p=>{
+          const div=document.createElement('div');
+          div.className='rem-item';
+          div.innerHTML=`<div class="rem-pip ${p.pipClass}"></div><div class="rem-body"><div class="rem-title">${p.titulo}</div><div class="rem-date">${p.fecha}</div></div><div class="${p.tagClass}">${p.tagText}</div><div class="rem-chk" onclick="marcarHecho(this)"></div><button class="btn-borrar-rem" onclick="borrarRem(this)" title="Borrar">✕</button>`;
+          remList.appendChild(div);
+        });
+        refreshRemCount();
+      }
+      if(recs.real){
+        realList.innerHTML = '';
+        recs.real.forEach(r=>{
+          const esSol = r.quien.startsWith('Sol');
+          const div=document.createElement('div');
+          div.className='real-item';
+          div.innerHTML=`<div class="real-check-done">✓</div><div class="real-body"><div class="real-title">${r.titulo}</div><div class="real-date">${r.fecha}</div><div class="real-quien ${esSol?'sol':''}"><div class="real-quien-dot"></div>${r.quien}</div></div><button class="btn-borrar-rem" onclick="borrarReal(this)" title="Borrar">✕</button>`;
+          realList.appendChild(div);
+        });
+        refreshRealCount();
+      }
+    }
+
+    mostrarIndicadorSync(false);
+
+  } catch(e){
+    mostrarIndicadorSync(false);
+    console.warn('Sync silenciosa error:', e);
+  }
+}
+
+// Indicador de sync sutil (puntito parpadeante en el topbar)
+function mostrarIndicadorSync(show){
+  let dot = document.getElementById('sync-dot');
+  if(!dot){
+    dot = document.createElement('div');
+    dot.id = 'sync-dot';
+    dot.style.cssText = `
+      width:6px;height:6px;border-radius:50%;
+      background:var(--acento);
+      opacity:0;transition:opacity 0.3s;
+      animation:none;
+      flex-shrink:0;
+    `;
+    document.querySelector('.topbar-right').prepend(dot);
+  }
+  if(show){
+    dot.style.opacity='1';
+    dot.style.animation='pulse 1s infinite';
+  } else {
+    dot.style.opacity='0';
+    dot.style.animation='none';
+  }
+}
+
+// Pausar polling cuando la app está en background, reanudar al volver
+document.addEventListener('visibilitychange', ()=>{
+  if(!document.hidden){
+    // Volvió al primer plano — sincronizar de inmediato
+    syncSilenciosa();
+  }
+});
+
+syncCargar().then(()=>{
+  iniciarPolling();
+});
 
 // ── SERVICE WORKER ──
 if('serviceWorker' in navigator){
