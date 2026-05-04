@@ -1409,6 +1409,7 @@ async function syncCargar(){
   refreshRealCount();
   renderCalendario();
   renderHistorial();
+  renderDashboard();
 }
 
 function mostrarCargando(show){
@@ -1533,6 +1534,8 @@ function addTx(){
   closeSheet('finanzas');
   refreshFinanzas();
   syncGuardar('finanzas');
+  // Si el dashboard está visible, actualizarlo también
+  if(S.section === 'dashboard') renderDashboard();
 }
 
 // ── CIERRE DE MES ──
@@ -1724,34 +1727,90 @@ function cargarInputsPresupuesto(){
 }
 
 function renderPresupuestoLista(cats){
-  const lista=document.getElementById('dash-presupuesto-lista');
-  const presup=S.presupuesto||{};
-  const catKeys=Object.keys(presup);
-  if(catKeys.length===0){
-    lista.innerHTML='<div style="text-align:center;padding:16px 0;color:var(--hint);font-size:13px;font-style:italic;">Tocá "+ editar" para definir tu presupuesto por categoría</div>';
+  const lista = document.getElementById('dash-presupuesto-lista');
+  const presup = S.presupuesto || {};
+  const catKeys = Object.keys(presup);
+
+  if(catKeys.length === 0){
+    lista.innerHTML = '<div style="text-align:center;padding:16px 0;color:var(--hint);font-size:13px;font-style:italic;">Tocá "+ editar" para definir tu presupuesto por categoría</div>';
     return;
   }
-  lista.innerHTML='';
-  catKeys.forEach(cat=>{
-    const limite=presup[cat];
-    const gastado=cats[cat]||0;
-    const pct=Math.min(Math.round((gastado/limite)*100),100);
-    const isOver=gastado>limite;
-    const isWarn=!isOver&&pct>=80;
-    const nombre=CAT_NAMES[cat]||cat;
-    const div=document.createElement('div');
-    div.className='presup-lista-item';
-    div.innerHTML=`
+
+  lista.innerHTML = '';
+
+  // Calcular total presupuestado vs total gastado en cats con presupuesto
+  let totalPresup = 0, totalGastado = 0;
+  catKeys.forEach(cat => {
+    totalPresup  += presup[cat] || 0;
+    totalGastado += cats[cat]  || 0;
+  });
+
+  // Resumen general arriba
+  const totalPct  = totalPresup > 0 ? Math.min(Math.round((totalGastado / totalPresup) * 100), 100) : 0;
+  const totalOver = totalGastado > totalPresup;
+  const totalWarn = !totalOver && totalPct >= 80;
+  const resumen   = document.createElement('div');
+  resumen.style.cssText = 'margin-bottom:16px;padding:14px;background:var(--bg3);border-radius:14px;border:1px solid var(--border);';
+  resumen.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:600;color:var(--white);">Total del mes</div>
+      <div style="font-size:11px;color:var(--muted);">${fmt(totalGastado)} de ${fmt(totalPresup)}</div>
+    </div>
+    <div class="presup-track" style="height:8px;">
+      <div class="presup-fill${totalOver?' over':''}" style="width:${totalPct}%;"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;">
+      <div style="font-size:11px;color:${totalOver?'var(--red)':totalWarn?'#d4a843':'var(--green)'};">
+        ${totalOver ? '⚠️ Presupuesto excedido' : totalWarn ? '⚡ Cerca del límite' : '✓ Dentro del presupuesto'}
+      </div>
+      <div style="font-size:11px;font-weight:600;color:${totalOver?'var(--red)':totalWarn?'#d4a843':'var(--acento)'};">${totalPct}%</div>
+    </div>
+  `;
+  lista.appendChild(resumen);
+
+  // Una fila por categoría presupuestada
+  // Ordenadas: primero las excedidas, luego las cerca del límite, luego el resto
+  const sorted = [...catKeys].sort((a,b)=>{
+    const pa = (cats[a]||0)/presup[a];
+    const pb = (cats[b]||0)/presup[b];
+    return pb - pa;
+  });
+
+  sorted.forEach(cat => {
+    const limite  = presup[cat];
+    const gastado = cats[cat] || 0;
+    const rawPct  = limite > 0 ? (gastado / limite) * 100 : 0;
+    const pct     = Math.min(Math.round(rawPct), 100);
+    const isOver  = gastado > limite;
+    const isWarn  = !isOver && rawPct >= 80;
+    const nombre  = CAT_NAMES[cat] || cat;
+    const restante = limite - gastado;
+
+    const div = document.createElement('div');
+    div.className = 'presup-lista-item';
+    div.innerHTML = `
       <div class="presup-emoji">${cat}</div>
       <div class="presup-info">
-        <div class="presup-nombre">${nombre}</div>
-        <div class="presup-track">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="presup-nombre">${nombre}</div>
+          <div class="presup-badge ${isOver?'over':isWarn?'warn':'ok'}" style="margin-top:0;">
+            ${isOver ? '⚠️ +'+fmt(Math.abs(restante)) : isWarn ? pct+'%' : pct+'%'}
+          </div>
+        </div>
+        <div class="presup-track" style="margin-top:6px;">
           <div class="presup-fill${isOver?' over':''}" style="width:${pct}%;"></div>
         </div>
-        <div class="presup-montos"><span>${fmt(gastado)}</span> de ${fmt(limite)}</div>
-      </div>
-      <div class="presup-badge ${isOver?'over':isWarn?'warn':'ok'}">
-        ${isOver?'⚠️ Excedido':isWarn?pct+'% usado':pct+'% usado'}
+        <div class="presup-montos" style="display:flex;justify-content:space-between;">
+          <span style="color:${isOver?'var(--red)':isWarn?'#d4a843':'var(--muted)'};">
+            Gastado: <span style="color:var(--white);font-weight:500;">${fmt(gastado)}</span>
+          </span>
+          <span>
+            ${isOver
+              ? `<span style="color:var(--red);">Excedido en ${fmt(Math.abs(restante))}</span>`
+              : `Queda: <span style="color:var(--green);font-weight:500;">${fmt(restante)}</span>`
+            }
+          </span>
+        </div>
       </div>
     `;
     lista.appendChild(div);
