@@ -1607,17 +1607,17 @@ const CAT_NAMES = {'🏠':'Vivienda','🛒':'Super','🛵':'Delivery','⚡':'Ser
 const CAT_COLORS = ['#b388d4','#e896b0','#7b6ed4','#d4688a','#6fcf97','#d4a843','#60a5fa','#a78bfa'];
 
 function renderDashboard(){
-  // Calcular gastos por categoría del mes actual
-  let inc=0, exp=0, luc=0, sol=0;
+  // ── Calcular totales ──
+  let inc=0, exp=0;
   const cats={};
   S.txs.forEach(t=>{
-    if(t.t==='ingreso'){ inc+=t.m; if(t.q==='Lucas')luc+=t.m; else sol+=t.m; }
+    if(t.t==='ingreso') inc+=t.m;
     else { exp+=t.m; cats[t.c]=(cats[t.c]||0)+t.m; }
   });
   const pozo = inc + S.balanceAcumulado - exp;
   const ahorroPct = inc>0 ? Math.round(((inc-exp)/inc)*100) : 0;
 
-  // Hero
+  // ── Hero ──
   document.getElementById('dash-balance').textContent = fmt(pozo);
   document.getElementById('dash-ing').textContent = fmt(inc);
   document.getElementById('dash-gasto').textContent = fmt(exp);
@@ -1625,81 +1625,76 @@ function renderDashboard(){
   const mesLabel = new Date().toLocaleDateString('es-AR',{month:'long',year:'numeric'});
   document.getElementById('dash-mes-label').textContent = mesLabel.charAt(0).toUpperCase()+mesLabel.slice(1);
 
+  // ── Gráfico: solo si hay gastos ──
   const catKeys = Object.keys(cats).filter(k=>cats[k]>0);
-
   if(catKeys.length === 0){
     document.getElementById('dash-sin-gastos').style.display='block';
     document.getElementById('dash-chart-wrap').style.display='none';
-    return;
+  } else {
+    document.getElementById('dash-sin-gastos').style.display='none';
+    document.getElementById('dash-chart-wrap').style.display='block';
+
+    // Torta SVG
+    const pie = document.getElementById('dash-pie');
+    pie.innerHTML='';
+    const cx=90,cy=90,r=70,ri=38;
+    let startAngle = -Math.PI/2;
+    const total = catKeys.reduce((s,k)=>s+cats[k],0);
+    catKeys.forEach((cat,i)=>{
+      const slice=(cats[cat]/total)*Math.PI*2;
+      const endAngle=startAngle+slice;
+      const x1=cx+r*Math.cos(startAngle),y1=cy+r*Math.sin(startAngle);
+      const x2=cx+r*Math.cos(endAngle),y2=cy+r*Math.sin(endAngle);
+      const xi1=cx+ri*Math.cos(startAngle),yi1=cy+ri*Math.sin(startAngle);
+      const xi2=cx+ri*Math.cos(endAngle),yi2=cy+ri*Math.sin(endAngle);
+      const large=slice>Math.PI?1:0;
+      const color=CAT_COLORS[i%CAT_COLORS.length];
+      const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('d',`M${xi1},${yi1} L${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2} L${xi2},${yi2} A${ri},${ri} 0 ${large},0 ${xi1},${yi1} Z`);
+      path.setAttribute('fill',color);path.setAttribute('opacity','0.9');
+      pie.appendChild(path);
+      startAngle=endAngle;
+    });
+    const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
+    txt.setAttribute('x',cx);txt.setAttribute('y',cy-6);
+    txt.setAttribute('text-anchor','middle');txt.setAttribute('fill','#c8c4d4');
+    txt.setAttribute('font-size','10');txt.setAttribute('font-family','Sora');
+    txt.textContent='Gastos';
+    const txt2=document.createElementNS('http://www.w3.org/2000/svg','text');
+    txt2.setAttribute('x',cx);txt2.setAttribute('y',cy+10);
+    txt2.setAttribute('text-anchor','middle');txt2.setAttribute('fill','#f0eef5');
+    txt2.setAttribute('font-size','12');txt2.setAttribute('font-weight','600');txt2.setAttribute('font-family','Sora');
+    txt2.textContent=fmt(total);
+    pie.appendChild(txt);pie.appendChild(txt2);
+
+    // Barras por categoría
+    const bars=document.getElementById('dash-bars');
+    bars.innerHTML='';
+    [...catKeys].sort((a,b)=>cats[b]-cats[a]).forEach((cat,i)=>{
+      const val=cats[cat];
+      const pct=Math.round((val/total)*100);
+      const color=CAT_COLORS[catKeys.indexOf(cat)%CAT_COLORS.length];
+      const nombre=CAT_NAMES[cat]||cat;
+      const presup=S.presupuesto?.[cat]||0;
+      const presupPct=presup>0?Math.min(Math.round((val/presup)*100),100):pct;
+      const isOver=presup>0&&val>presup;
+      const div=document.createElement('div');
+      div.className='dash-bar-item';
+      div.innerHTML=`
+        <div class="dash-bar-header">
+          <div class="dash-bar-label">${cat} ${nombre}</div>
+          <div class="dash-bar-vals"><span>${fmt(val)}</span>${presup>0?' / '+fmt(presup):''}</div>
+        </div>
+        <div class="dash-bar-track">
+          <div class="dash-bar-fill${isOver?' over':''}" style="width:${presupPct}%;${isOver?'':'background:'+color+';'}"></div>
+        </div>
+        <div class="dash-bar-pct">${pct}% del total${presup>0?(isOver?' · ⚠️ pasaste el límite':' · '+Math.round((val/presup)*100)+'% del presupuesto'):''}
+        </div>`;
+      bars.appendChild(div);
+    });
   }
-  document.getElementById('dash-sin-gastos').style.display='none';
-  document.getElementById('dash-chart-wrap').style.display='block';
 
-  // ── TORTA SVG ──
-  const pie = document.getElementById('dash-pie');
-  pie.innerHTML='';
-  const cx=90,cy=90,r=70,ri=38;
-  let startAngle = -Math.PI/2;
-  const total = catKeys.reduce((s,k)=>s+cats[k],0);
-
-  catKeys.forEach((cat,i)=>{
-    const slice = (cats[cat]/total)*Math.PI*2;
-    const endAngle = startAngle+slice;
-    const x1=cx+r*Math.cos(startAngle), y1=cy+r*Math.sin(startAngle);
-    const x2=cx+r*Math.cos(endAngle),   y2=cy+r*Math.sin(endAngle);
-    const xi1=cx+ri*Math.cos(startAngle),yi1=cy+ri*Math.sin(startAngle);
-    const xi2=cx+ri*Math.cos(endAngle),  yi2=cy+ri*Math.sin(endAngle);
-    const large=slice>Math.PI?1:0;
-    const color=CAT_COLORS[i%CAT_COLORS.length];
-    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
-    path.setAttribute('d',`M${xi1},${yi1} L${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2} L${xi2},${yi2} A${ri},${ri} 0 ${large},0 ${xi1},${yi1} Z`);
-    path.setAttribute('fill',color);
-    path.setAttribute('opacity','0.9');
-    pie.appendChild(path);
-    startAngle=endAngle;
-  });
-  // Texto centro
-  const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
-  txt.setAttribute('x',cx);txt.setAttribute('y',cy-6);
-  txt.setAttribute('text-anchor','middle');txt.setAttribute('fill','#c8c4d4');
-  txt.setAttribute('font-size','10');txt.setAttribute('font-family','Sora');
-  txt.textContent='Gastos';
-  const txt2=document.createElementNS('http://www.w3.org/2000/svg','text');
-  txt2.setAttribute('x',cx);txt2.setAttribute('y',cy+10);
-  txt2.setAttribute('text-anchor','middle');txt2.setAttribute('fill','#f0eef5');
-  txt2.setAttribute('font-size','12');txt2.setAttribute('font-weight','600');txt2.setAttribute('font-family','Sora');
-  txt2.textContent=fmt(total);
-  pie.appendChild(txt);pie.appendChild(txt2);
-
-  // ── BARRAS ──
-  const bars = document.getElementById('dash-bars');
-  bars.innerHTML='';
-  const sorted = [...catKeys].sort((a,b)=>cats[b]-cats[a]);
-  sorted.forEach((cat,i)=>{
-    const val=cats[cat];
-    const pct=Math.round((val/total)*100);
-    const color=CAT_COLORS[catKeys.indexOf(cat)%CAT_COLORS.length];
-    const nombre=CAT_NAMES[cat]||cat;
-    const presup=S.presupuesto?.[cat]||0;
-    const presupPct=presup>0?Math.min(Math.round((val/presup)*100),100):pct;
-    const isOver=presup>0&&val>presup;
-    const div=document.createElement('div');
-    div.className='dash-bar-item';
-    div.innerHTML=`
-      <div class="dash-bar-header">
-        <div class="dash-bar-label">${cat} ${nombre}</div>
-        <div class="dash-bar-vals"><span>${fmt(val)}</span>${presup>0?' / '+fmt(presup):''}</div>
-      </div>
-      <div class="dash-bar-track">
-        <div class="dash-bar-fill${isOver?' over':''}" style="width:${presupPct}%;background:${isOver?'':''}${isOver?'':color};"></div>
-      </div>
-      <div class="dash-bar-pct">${pct}% del total${presup>0?(isOver?' · ⚠️ pasaste el límite':' · '+Math.round((val/presup)*100)+'% del presupuesto'):''}
-      </div>
-    `;
-    bars.appendChild(div);
-  });
-
-  // ── PRESUPUESTO LISTA ──
+  // ── Presupuesto: SIEMPRE se renderiza, tenga gastos o no ──
   renderPresupuestoLista(cats);
 }
 
