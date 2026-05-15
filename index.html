@@ -218,9 +218,28 @@ body{
 /* ── TRANSACCIONES ── */
 .tx-item{
   display:flex;align-items:center;gap:12px;
-  padding:12px 0;border-bottom:1px solid var(--border);
+  padding:12px 8px;border-bottom:1px solid var(--border);
+  cursor:pointer;border-radius:10px;margin:0 -8px;
+  transition:background 0.15s;
+  user-select:none;-webkit-user-select:none;
 }
 .tx-item:last-child{border-bottom:none;}
+.tx-item.pressing{background:var(--bg3);}
+
+/* ── CAT CHIP ── */
+.cat-chip{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 12px;background:var(--bg3);
+  border:1px solid var(--border);border-radius:10px;
+  margin-bottom:6px;
+}
+.cat-chip-label{flex:1;font-size:13px;color:var(--text);}
+.cat-chip-del{
+  background:transparent;border:none;color:var(--hint);
+  font-size:14px;cursor:pointer;padding:2px 6px;border-radius:6px;
+  transition:color 0.15s,background 0.15s;font-family:'Sora',sans-serif;
+}
+.cat-chip-del:hover{color:var(--red);background:rgba(232,112,112,0.1);}
 .tx-icon{
   width:40px;height:40px;border-radius:13px;
   display:flex;align-items:center;justify-content:center;
@@ -802,6 +821,15 @@ body{
       <div id="tx-empty" style="text-align:center;padding:20px 0;font-size:12px;color:var(--hint);">Sin movimientos este mes</div>
     </div>
 
+    <!-- GESTIONAR CATEGORÍAS -->
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-title" style="margin-bottom:8px;">
+        Categorías
+        <button onclick="openSheet('categorias')" style="background:transparent;border:1px solid var(--acento-border);border-radius:100px;padding:4px 12px;font-size:11px;color:var(--acento);font-family:'Sora',sans-serif;cursor:pointer;">⚙️ gestionar</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.5;">Personalizá las categorías de gastos y del super según tus necesidades.</div>
+    </div>
+
     <!-- CIERRE DE MES -->
     <div class="card" style="border-color:var(--acento-border);">
       <div class="card-title" style="margin-bottom:8px;">Cierre de mes</div>
@@ -1057,6 +1085,60 @@ body{
   </div>
 </div>
 
+<!-- SHEET: ACCION TX (long press) -->
+<div class="sheet-overlay" id="sheet-tx-accion" onclick="closeSheet('tx-accion',event)">
+  <div class="sheet-box" onclick="event.stopPropagation()" style="padding-bottom:32px;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="tx-accion-title" style="font-size:16px;margin-bottom:4px;"></div>
+    <div id="tx-accion-sub" style="font-size:12px;color:var(--muted);margin-bottom:20px;"></div>
+    <button class="btn-ok" onclick="abrirEditarTx()" style="margin-bottom:10px;background:var(--acento-grad);">
+      ✏️ Editar movimiento
+    </button>
+    <button class="btn-ok" onclick="eliminarTx()" style="background:linear-gradient(135deg,var(--red),#c43a3a);margin-bottom:8px;">
+      🗑 Eliminar movimiento
+    </button>
+    <button class="btn-no" onclick="closeSheet('tx-accion')">Cancelar</button>
+  </div>
+</div>
+
+<!-- SHEET: EDITAR TX -->
+<div class="sheet-overlay" id="sheet-tx-editar" onclick="closeSheet('tx-editar',event)">
+  <div class="sheet-box" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Editar movimiento</div>
+    <div class="fields">
+      <div class="field-row">
+        <select class="fselect" id="edit-tipo" onchange="onEditTipoChange()">
+          <option value="ingreso">💰 Ingreso al pozo</option>
+          <option value="gasto">💸 Gasto del pozo</option>
+        </select>
+        <select class="fselect" id="edit-quien">
+          <option value="Lucas">Lucas</option>
+          <option value="Sol">Sol</option>
+        </select>
+      </div>
+      <input class="finput" id="edit-desc" type="text" placeholder="Descripción">
+      <input class="finput" id="edit-monto" type="number" inputmode="numeric" placeholder="Monto en pesos">
+      <select class="fselect" id="edit-cat" style="display:none;">
+        <option value="🏠">🏠 Vivienda / Alquiler</option>
+        <option value="🛒">🛒 Super / Almacén</option>
+        <option value="🛵">🛵 Delivery</option>
+        <option value="⚡">⚡ Servicios</option>
+        <option value="🚗">🚗 Transporte</option>
+        <option value="💊">💊 Salud</option>
+        <option value="🎉">🎉 Ocio / Salidas</option>
+        <option value="📦">📦 Otro</option>
+        <option value="💼">💼 Sueldo</option>
+      </select>
+      <div id="edit-cat-custom-wrap" style="display:none;">
+        <div id="edit-cat-custom-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      </div>
+    </div>
+    <button class="btn-ok" onclick="guardarEditTx()">Guardar cambios</button>
+    <button class="btn-no" onclick="closeSheet('tx-editar')" style="margin-top:8px;">Cancelar</button>
+  </div>
+</div>
+
 <!-- SHEET: COMIDA -->
 <div class="sheet-overlay" id="sheet-meal" onclick="closeSheet('meal',event)">
   <div class="sheet-box" onclick="event.stopPropagation()">
@@ -1189,6 +1271,36 @@ body{
   </div>
 </div>
 
+<!-- SHEET: GESTIONAR CATEGORÍAS -->
+<div class="sheet-overlay" id="sheet-categorias" onclick="closeSheet('categorias',event)">
+  <div class="sheet-box" onclick="event.stopPropagation()" style="padding-bottom:36px;max-height:85vh;overflow-y:auto;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Gestionar categorías</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Agregá o quitá categorías para gastos y lista del super.</div>
+
+    <!-- GASTOS -->
+    <div style="font-size:11px;color:var(--acento);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;font-weight:600;">💸 Gastos</div>
+    <div id="cat-gastos-list" style="margin-bottom:18px;"></div>
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <input class="finput" id="cat-gastos-emoji" type="text" placeholder="🏷️" style="width:60px;flex:none;text-align:center;">
+      <input class="finput" id="cat-gastos-nombre" type="text" placeholder="Nueva categoría" style="flex:1;">
+      <button class="btn-ok" onclick="agregarCat('gastos')" style="flex:none;padding:11px 14px;margin:0;border-radius:12px;font-size:13px;">+</button>
+    </div>
+
+    <!-- SUPER -->
+    <div style="font-size:11px;color:var(--rosa);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;font-weight:600;">🛒 Super</div>
+    <div id="cat-super-list" style="margin-bottom:18px;"></div>
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <input class="finput" id="cat-super-emoji" type="text" placeholder="🏷️" style="width:60px;flex:none;text-align:center;">
+      <input class="finput" id="cat-super-nombre" type="text" placeholder="Nueva categoría" style="flex:1;">
+      <button class="btn-ok" onclick="agregarCat('super')" style="flex:none;padding:11px 14px;margin:0;border-radius:12px;font-size:13px;">+</button>
+    </div>
+
+    <button class="btn-ok" onclick="guardarCategorias()">Guardar categorías</button>
+    <button class="btn-no" onclick="closeSheet('categorias')" style="margin-top:8px;">Cancelar</button>
+  </div>
+</div>
+
 <!-- SWITCH USUARIO -->
 <div class="sheet-overlay" id="user-switch-overlay" onclick="closeUserSwitch()">
   <div class="sheet-box" onclick="event.stopPropagation()" style="padding-bottom:32px;">
@@ -1290,7 +1402,14 @@ function syncGuardar(tabla){
   clearTimeout(_syncTimer);
   _syncTimer = setTimeout(async ()=>{
     if(tabla === 'finanzas' || !tabla){
-      await gsGuardar('finanzas', { txs: S.txs, balanceAcumulado: S.balanceAcumulado, historial: S.historial||[], presupuesto: S.presupuesto||{} });
+      await gsGuardar('finanzas', {
+        txs: S.txs,
+        balanceAcumulado: S.balanceAcumulado,
+        historial: S.historial||[],
+        presupuesto: S.presupuesto||{},
+        catGastos: S.catGastos||[],
+        catSuper: S.catSuper||[]
+      });
     }
     if(tabla === 'comidas' || !tabla){
       await gsGuardar('comidas', S.meals);
@@ -1348,15 +1467,12 @@ async function syncCargar(){
     S.balanceAcumulado = finanzas.balanceAcumulado || 0;
     S.historial = finanzas.historial || [];
     S.presupuesto = finanzas.presupuesto || {};
-    // Reconstruir DOM de transacciones
-    const list = document.getElementById('tx-list');
-    list.innerHTML = '';
-    S.txs.forEach(t=>{
-      const div=document.createElement('div');
-      div.className='tx-item';
-      div.innerHTML=`<div class="tx-icon">${t.c}</div><div class="tx-body"><div class="tx-name">${t.d}</div><div class="tx-sub">${t.q} · ${t.t==='ingreso'?'ingreso al pozo':'Del pozo'}</div></div><div class="tx-amt ${t.t==='ingreso'?'tx-pos':'tx-neg'}">${t.t==='ingreso'?'+':'-'}${fmt(t.m)}</div>`;
-      list.appendChild(div);
-    });
+    if(finanzas.catGastos && finanzas.catGastos.length) S.catGastos = finanzas.catGastos;
+    if(finanzas.catSuper  && finanzas.catSuper.length)  S.catSuper  = finanzas.catSuper;
+    sincronizarSelectsCategorias();
+    reconstruirTxDOM();
+    // Reconstruir DOM de transacciones con long press
+    reconstruirTxDOM();
   }
 
   // Comidas
@@ -1520,22 +1636,14 @@ function addTx(){
   if(!desc || !monto || monto<=0) return;
 
   S.txs.unshift({t:tipo, d:desc, q:quien, c:cat, m:monto});
-
-  const subTxt = tipo==='ingreso'
-    ? `${quien} · ingreso al pozo`
-    : `Del pozo · ${quien}`;
-  const div=document.createElement('div');
-  div.className='tx-item';
-  div.innerHTML=`<div class="tx-icon">${cat}</div><div class="tx-body"><div class="tx-name">${desc}</div><div class="tx-sub">${subTxt}</div></div><div class="tx-amt ${tipo==='ingreso'?'tx-pos':'tx-neg'}">${tipo==='ingreso'?'+':'-'}${fmt(monto)}</div>`;
-  document.getElementById('tx-list').prepend(div);
+  reconstruirTxDOM();
 
   document.getElementById('tx-desc').value='';
   document.getElementById('tx-monto').value='';
   closeSheet('finanzas');
   refreshFinanzas();
   syncGuardar('finanzas');
-  // Si el dashboard está visible, actualizarlo también
-  if(S.section === 'dashboard') renderDashboard();
+  if(S.section==='dashboard') renderDashboard();
 }
 
 // ── CIERRE DE MES ──
@@ -1602,7 +1710,198 @@ function ejecutarCierreMes(){
   showToast(`✓ Mes cerrado · Balance: ${fmt(S.balanceAcumulado)}`);
 }
 
-// ── DASHBOARD ──
+// ── LONG PRESS EN MOVIMIENTOS ──
+let _txLongPressTimer = null;
+let _txTarget = null; // índice en S.txs
+let _txElement = null;
+
+function attachTxLongPress(el, idx){
+  const start = (e)=>{
+    _txElement = el;
+    el.classList.add('pressing');
+    _txLongPressTimer = setTimeout(()=>{
+      navigator.vibrate && navigator.vibrate(40);
+      openTxAccion(idx);
+    }, 600);
+  };
+  const cancel = ()=>{
+    clearTimeout(_txLongPressTimer);
+    el.classList.remove('pressing');
+  };
+  el.addEventListener('touchstart', start, {passive:true});
+  el.addEventListener('touchend', cancel);
+  el.addEventListener('touchmove', cancel);
+  el.addEventListener('mousedown', start);
+  el.addEventListener('mouseup', cancel);
+  el.addEventListener('mouseleave', cancel);
+}
+
+function openTxAccion(idx){
+  _txTarget = idx;
+  el = document.getElementById('sheet-tx-accion');
+  const tx = S.txs[idx];
+  if(!tx) return;
+  document.getElementById('tx-accion-title').textContent = tx.d;
+  document.getElementById('tx-accion-sub').textContent =
+    `${tx.q} · ${tx.t==='ingreso'?'Ingreso':'Gasto'} · ${fmt(tx.m)}`;
+  el.classList.add('open');
+}
+
+function abrirEditarTx(){
+  closeSheet('tx-accion');
+  const tx = S.txs[_txTarget];
+  if(!tx) return;
+  document.getElementById('edit-tipo').value = tx.t;
+  document.getElementById('edit-quien').value = tx.q;
+  document.getElementById('edit-desc').value = tx.d;
+  document.getElementById('edit-monto').value = tx.m;
+  onEditTipoChange();
+  if(tx.t === 'gasto'){
+    // Seleccionar la categoría correcta
+    const sel = document.getElementById('edit-cat');
+    for(const opt of sel.options){ if(opt.value === tx.c){ opt.selected=true; break; } }
+  }
+  document.getElementById('sheet-tx-editar').classList.add('open');
+}
+
+function onEditTipoChange(){
+  const tipo = document.getElementById('edit-tipo').value;
+  document.getElementById('edit-cat').style.display = tipo==='gasto'?'block':'none';
+}
+
+function guardarEditTx(){
+  const tx = S.txs[_txTarget];
+  if(!tx) return;
+  const tipo  = document.getElementById('edit-tipo').value;
+  const quien = document.getElementById('edit-quien').value;
+  const desc  = document.getElementById('edit-desc').value.trim();
+  const monto = parseFloat(document.getElementById('edit-monto').value);
+  const cat   = tipo==='gasto' ? document.getElementById('edit-cat').value : '💼';
+  if(!desc || !monto || monto<=0) return;
+
+  // Actualizar en S.txs
+  S.txs[_txTarget] = {t:tipo, d:desc, q:quien, c:cat, m:monto};
+
+  // Reconstruir DOM de tx
+  reconstruirTxDOM();
+  closeSheet('tx-editar');
+  refreshFinanzas();
+  syncGuardar('finanzas');
+  if(S.section==='dashboard') renderDashboard();
+  showToast('✓ Movimiento actualizado');
+}
+
+function eliminarTx(){
+  openConfirm(
+    '¿Eliminar movimiento?',
+    `Se va a borrar "${S.txs[_txTarget]?.d}" de ${fmt(S.txs[_txTarget]?.m)}.`,
+    ()=>{
+      S.txs.splice(_txTarget, 1);
+      reconstruirTxDOM();
+      closeSheet('tx-accion');
+      refreshFinanzas();
+      syncGuardar('finanzas');
+      if(S.section==='dashboard') renderDashboard();
+      showToast('🗑 Movimiento eliminado');
+    }
+  );
+  closeSheet('tx-accion');
+}
+
+function reconstruirTxDOM(){
+  const list = document.getElementById('tx-list');
+  list.innerHTML = '';
+  S.txs.forEach((t, idx)=>{
+    const div = document.createElement('div');
+    div.className = 'tx-item';
+    div.innerHTML = `<div class="tx-icon">${t.c}</div><div class="tx-body"><div class="tx-name">${t.d}</div><div class="tx-sub">${t.q} · ${t.t==='ingreso'?'ingreso al pozo':'Del pozo'}</div></div><div class="tx-amt ${t.t==='ingreso'?'tx-pos':'tx-neg'}">${t.t==='ingreso'?'+':'-'}${fmt(t.m)}</div>`;
+    list.appendChild(div);
+    attachTxLongPress(div, idx);
+  });
+  document.getElementById('tx-empty').style.display = S.txs.length===0?'block':'none';
+}
+
+// ── CATEGORÍAS PERSONALIZADAS ──
+// Estado inicial de categorías
+if(!S.catGastos) S.catGastos = [
+  {emoji:'🏠',nombre:'Vivienda / Alquiler'},
+  {emoji:'🛒',nombre:'Super / Almacén'},
+  {emoji:'🛵',nombre:'Delivery'},
+  {emoji:'⚡',nombre:'Servicios'},
+  {emoji:'🚗',nombre:'Transporte'},
+  {emoji:'💊',nombre:'Salud'},
+  {emoji:'🎉',nombre:'Ocio / Salidas'},
+  {emoji:'📦',nombre:'Otro'},
+];
+if(!S.catSuper) S.catSuper = [
+  {emoji:'🥦',nombre:'Verduras y frutas'},
+  {emoji:'🥛',nombre:'Lácteos'},
+  {emoji:'🥩',nombre:'Carnes'},
+  {emoji:'🍞',nombre:'Almacén'},
+  {emoji:'🧴',nombre:'Limpieza'},
+  {emoji:'🧃',nombre:'Bebidas'},
+  {emoji:'🧀',nombre:'Fiambrería'},
+];
+
+function sincronizarSelectsCategorias(){
+  // Actualizar select de gastos en el sheet de finanzas
+  const selGasto = document.getElementById('tx-cat');
+  const selEdit  = document.getElementById('edit-cat');
+  const selPresup = document.querySelectorAll('.presup-input');
+
+  [selGasto, selEdit].forEach(sel=>{
+    if(!sel) return;
+    const valActual = sel.value;
+    sel.innerHTML = S.catGastos.map(c=>`<option value="${c.emoji}">${c.emoji} ${c.nombre}</option>`).join('');
+    // Restaurar valor si sigue existiendo
+    if([...sel.options].some(o=>o.value===valActual)) sel.value = valActual;
+  });
+
+  // Actualizar select del super
+  const selSuper = document.getElementById('sup-cat');
+  if(selSuper){
+    selSuper.innerHTML = S.catSuper.map(c=>`<option>${c.emoji} ${c.nombre}</option>`).join('');
+  }
+}
+
+function renderCatSheet(){
+  ['gastos','super'].forEach(tipo=>{
+    const lista = document.getElementById(`cat-${tipo}-list`);
+    lista.innerHTML = '';
+    const cats = tipo==='gastos' ? S.catGastos : S.catSuper;
+    cats.forEach((c,i)=>{
+      const div = document.createElement('div');
+      div.className = 'cat-chip';
+      div.innerHTML = `<span style="font-size:18px;">${c.emoji}</span><span class="cat-chip-label">${c.nombre}</span><button class="cat-chip-del" onclick="quitarCat('${tipo}',${i})">✕</button>`;
+      lista.appendChild(div);
+    });
+  });
+}
+
+function agregarCat(tipo){
+  const emoji  = document.getElementById(`cat-${tipo}-emoji`).value.trim() || '🏷️';
+  const nombre = document.getElementById(`cat-${tipo}-nombre`).value.trim();
+  if(!nombre) return;
+  if(tipo==='gastos') S.catGastos.push({emoji,nombre});
+  else S.catSuper.push({emoji,nombre});
+  document.getElementById(`cat-${tipo}-emoji`).value = '';
+  document.getElementById(`cat-${tipo}-nombre`).value = '';
+  renderCatSheet();
+}
+
+function quitarCat(tipo, idx){
+  if(tipo==='gastos') S.catGastos.splice(idx,1);
+  else S.catSuper.splice(idx,1);
+  renderCatSheet();
+}
+
+function guardarCategorias(){
+  sincronizarSelectsCategorias();
+  syncGuardar('finanzas'); // guardamos cats junto con finanzas
+  closeSheet('categorias');
+  showToast('✓ Categorías guardadas');
+}
+
 const CAT_NAMES = {'🏠':'Vivienda','🛒':'Super','🛵':'Delivery','⚡':'Servicios','🚗':'Transporte','💊':'Salud','🎉':'Ocio','📦':'Otro'};
 const CAT_COLORS = ['#b388d4','#e896b0','#7b6ed4','#d4688a','#6fcf97','#d4a843','#60a5fa','#a78bfa'];
 
@@ -1990,6 +2289,9 @@ function openSheet(id,extra){
   }
   if(id==='presupuesto'){
     cargarInputsPresupuesto();
+  }
+  if(id==='categorias'){
+    renderCatSheet();
   }
   document.getElementById('sheet-'+id).classList.add('open');
 }
@@ -2439,6 +2741,7 @@ function addRem(){
 
 // ── INICIO ──
 onTipoChange();
+sincronizarSelectsCategorias();
 
 // ── POLLING EN TIEMPO REAL ──
 const POLL_INTERVAL = 12000; // cada 12 segundos
@@ -2485,14 +2788,10 @@ async function syncSilenciosa(){
     if(finanzas && JSON.stringify({txs:S.txs, bal:S.balanceAcumulado}) !== JSON.stringify({txs:finanzas.txs, bal:finanzas.balanceAcumulado})){
       S.txs = finanzas.txs || [];
       S.balanceAcumulado = finanzas.balanceAcumulado || 0;
-      const list = document.getElementById('tx-list');
-      list.innerHTML = '';
-      S.txs.forEach(t=>{
-        const div=document.createElement('div');
-        div.className='tx-item';
-        div.innerHTML=`<div class="tx-icon">${t.c}</div><div class="tx-body"><div class="tx-name">${t.d}</div><div class="tx-sub">${t.q} · ${t.t==='ingreso'?'ingreso al pozo':'Del pozo'}</div></div><div class="tx-amt ${t.t==='ingreso'?'tx-pos':'tx-neg'}">${t.t==='ingreso'?'+':'-'}${fmt(t.m)}</div>`;
-        list.appendChild(div);
-      });
+      if(finanzas.presupuesto) S.presupuesto = finanzas.presupuesto;
+      if(finanzas.catGastos && finanzas.catGastos.length){ S.catGastos=finanzas.catGastos; sincronizarSelectsCategorias(); }
+      if(finanzas.catSuper  && finanzas.catSuper.length) { S.catSuper=finanzas.catSuper;   sincronizarSelectsCategorias(); }
+      reconstruirTxDOM();
       refreshFinanzas();
     }
 
