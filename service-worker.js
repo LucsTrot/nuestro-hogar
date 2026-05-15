@@ -1,4 +1,4 @@
-const CACHE = 'nuestro-hogar-v12';
+const CACHE = 'nuestro-hogar-v13';
 const ASSETS = [
   '/nuestro-hogar/',
   '/nuestro-hogar/index.html',

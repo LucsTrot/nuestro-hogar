@@ -1281,19 +1281,23 @@ body{
     <!-- GASTOS -->
     <div style="font-size:11px;color:var(--acento);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;font-weight:600;">💸 Gastos</div>
     <div id="cat-gastos-list" style="margin-bottom:18px;"></div>
-    <div style="display:flex;gap:8px;margin-bottom:20px;">
-      <input class="finput" id="cat-gastos-emoji" type="text" placeholder="🏷️" style="width:60px;flex:none;text-align:center;">
-      <input class="finput" id="cat-gastos-nombre" type="text" placeholder="Nueva categoría" style="flex:1;">
-      <button class="btn-ok" onclick="agregarCat('gastos')" style="flex:none;padding:11px 14px;margin:0;border-radius:12px;font-size:13px;">+</button>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+      <div style="display:flex;gap:8px;">
+        <input class="finput" id="cat-gastos-emoji" type="text" placeholder="🏷️" style="width:52px;flex:none;text-align:center;font-size:18px;">
+        <input class="finput" id="cat-gastos-nombre" type="text" placeholder="Nueva categoría" style="flex:1;">
+      </div>
+      <button class="btn-ok" onclick="agregarCat('gastos')" style="width:100%;padding:12px;border-radius:12px;font-size:14px;">+ Agregar categoría</button>
     </div>
 
     <!-- SUPER -->
     <div style="font-size:11px;color:var(--rosa);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;font-weight:600;">🛒 Super</div>
     <div id="cat-super-list" style="margin-bottom:18px;"></div>
-    <div style="display:flex;gap:8px;margin-bottom:20px;">
-      <input class="finput" id="cat-super-emoji" type="text" placeholder="🏷️" style="width:60px;flex:none;text-align:center;">
-      <input class="finput" id="cat-super-nombre" type="text" placeholder="Nueva categoría" style="flex:1;">
-      <button class="btn-ok" onclick="agregarCat('super')" style="flex:none;padding:11px 14px;margin:0;border-radius:12px;font-size:13px;">+</button>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+      <div style="display:flex;gap:8px;">
+        <input class="finput" id="cat-super-emoji" type="text" placeholder="🏷️" style="width:52px;flex:none;text-align:center;font-size:18px;">
+        <input class="finput" id="cat-super-nombre" type="text" placeholder="Nueva categoría" style="flex:1;">
+      </div>
+      <button class="btn-ok" onclick="agregarCat('super')" style="width:100%;padding:12px;border-radius:12px;font-size:14px;">+ Agregar categoría</button>
     </div>
 
     <button class="btn-ok" onclick="guardarCategorias()">Guardar categorías</button>
